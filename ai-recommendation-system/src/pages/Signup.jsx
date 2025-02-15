@@ -1,5 +1,6 @@
-import React, { useState } from 'react';
-import { Link } from 'react-router-dom';
+import React, { useState, useContext } from 'react';
+import { useNavigate } from 'react-router-dom';
+import { UserContext } from '../context/userContext';
 
 const Signup = () => {
   const [formData, setFormData] = useState({
@@ -7,6 +8,9 @@ const Signup = () => {
     email: '',
     password: '',
   });
+
+  const { setUserInfo } = useContext(UserContext);
+  const navigate = useNavigate();
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -18,9 +22,13 @@ const Signup = () => {
 
   const handleSubmit = (e) => {
     e.preventDefault();
-    // Add your signup logic here (e.g., API call to register the user)
-    // Redirect to login page after successful signup
-    window.location.href = '/';
+    // Set user info in context
+    setUserInfo({
+      name: formData.name,
+      email: formData.email,
+    });
+    // Redirect to chat page
+    navigate('/chat');
   };
 
   return (
@@ -73,9 +81,9 @@ const Signup = () => {
         </form>
         <p className="mt-4 text-center">
           Already have an account?{' '}
-          <Link to="/" className="text-blue-500">
+          <a href="/" className="text-blue-500">
             Login
-          </Link>
+          </a>
         </p>
       </div>
     </div>
