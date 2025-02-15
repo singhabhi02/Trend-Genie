@@ -1,9 +1,15 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useContext } from 'react';
+import Navbar from '../components/Navbar';
+import { UserContext } from '../context/userContext';
+import { useNavigate } from 'react-router-dom';
 
 const Chat = () => {
   const [messages, setMessages] = useState([]);
   const [input, setInput] = useState('');
   const [isDarkMode, setIsDarkMode] = useState(false);
+  const [profilePicture, setProfilePicture] = useState(null);
+  const { userInfo, setUserInfo } = useContext(UserContext);
+  const navigate = useNavigate();
 
   // Toggle dark mode
   const toggleDarkMode = () => {
@@ -19,6 +25,25 @@ const Chat = () => {
     }
   }, [isDarkMode]);
 
+  // Handle profile picture upload
+  const handleProfilePictureUpload = (e) => {
+    const file = e.target.files[0];
+    if (file) {
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        setProfilePicture(reader.result);
+      };
+      reader.readAsDataURL(file);
+    }
+  };
+
+  // Handle logout
+  const handleLogout = () => {
+    setUserInfo({ name: '', email: '' }); // Clear user info
+    navigate('/'); // Redirect to login page
+  };
+
+  // Handle sending a message
   const handleSend = () => {
     if (input.trim()) {
       setMessages([...messages, { text: input, sender: 'user' }]);
@@ -34,23 +59,19 @@ const Chat = () => {
   };
 
   return (
-    <div className={`min-h-screen ${isDarkMode ? 'bg-gray-900' : 'bg-gray-100'} p-6`}>
-      <div className="max-w-4xl mx-auto h-[80vh] flex flex-col">
-        {/* Header */}
-        <div className="flex justify-between items-center mb-4">
-          <h1 className={`text-2xl font-bold ${isDarkMode ? 'text-white' : 'text-gray-800'}`}>
-            Trend-Genie
-          </h1>
-          <button
-            onClick={toggleDarkMode}
-            className={`p-2 rounded-full ${
-              isDarkMode ? 'bg-gray-700 text-white' : 'bg-gray-200 text-gray-800'
-            }`}
-          >
-            {isDarkMode ? '🌙' : '☀️'}
-          </button>
-        </div>
+    <div className={`min-h-screen ${isDarkMode ? 'bg-gray-900' : 'bg-gray-100'} pt-16`}>
+      {/* Navbar */}
+      <Navbar
+        isDarkMode={isDarkMode}
+        toggleDarkMode={toggleDarkMode}
+        userInfo={userInfo}
+        profilePicture={profilePicture}
+        handleProfilePictureUpload={handleProfilePictureUpload}
+        onLogout={handleLogout}
+      />
 
+      {/* Chat Interface */}
+      <div className="max-w-4xl mx-auto h-[80vh] flex flex-col">
         {/* Chat Messages */}
         <div className="flex-1 overflow-y-auto p-4 bg-white dark:bg-gray-800 rounded-lg shadow-md">
           {messages.map((msg, index) => (

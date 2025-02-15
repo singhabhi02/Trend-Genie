@@ -23,7 +23,7 @@ const Login = () => {
     console.log('Login Data:', formData);
 
     // Simulate a successful login
-    alert('Login successful! Redirecting to chat...');
+    // alert('Login successful! Redirecting to chat...');
     navigate('/chat'); // Navigate to the chat route
   };
 
