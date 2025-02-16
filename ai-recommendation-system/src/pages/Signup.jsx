@@ -1,6 +1,5 @@
-import React, { useState, useContext } from 'react';
+import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { UserContext } from '../context/userContext';
 
 const Signup = () => {
   const [formData, setFormData] = useState({
@@ -9,7 +8,6 @@ const Signup = () => {
     password: '',
   });
 
-  const { setUserInfo } = useContext(UserContext);
   const navigate = useNavigate();
 
   const handleChange = (e) => {
@@ -22,13 +20,19 @@ const Signup = () => {
 
   const handleSubmit = (e) => {
     e.preventDefault();
-    // Set user info in context
-    setUserInfo({
+
+    // Store user data in local storage
+    const users = JSON.parse(localStorage.getItem('users')) || [];
+    const newUser = {
       name: formData.name,
       email: formData.email,
-    });
-    // Redirect to chat page
-    navigate('/chat');
+      password: formData.password,
+    };
+    users.push(newUser);
+    localStorage.setItem('users', JSON.stringify(users));
+
+    // Redirect to login page
+    navigate('/');
   };
 
   return (
