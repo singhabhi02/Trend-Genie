@@ -11,6 +11,16 @@ const Chat = () => {
   const { userInfo, setUserInfo } = useContext(UserContext);
   const navigate = useNavigate();
 
+  // Check if the user is logged in
+  useEffect(() => {
+    const loggedInUser = JSON.parse(localStorage.getItem('loggedInUser'));
+    if (!loggedInUser) {
+      navigate('/'); // Redirect to login if no user is logged in
+    } else {
+      setUserInfo(loggedInUser); // Set user info in context
+    }
+  }, [navigate, setUserInfo]);
+
   // Toggle dark mode
   const toggleDarkMode = () => {
     setIsDarkMode(!isDarkMode);
@@ -39,7 +49,8 @@ const Chat = () => {
 
   // Handle logout
   const handleLogout = () => {
-    setUserInfo({ name: '', email: '' }); // Clear user info
+    localStorage.removeItem('loggedInUser'); // Clear logged-in user from local storage
+    setUserInfo({ name: '', email: '' }); // Clear user info in context
     navigate('/'); // Redirect to login page
   };
 

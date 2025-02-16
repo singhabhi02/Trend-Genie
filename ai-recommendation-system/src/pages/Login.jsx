@@ -7,6 +7,7 @@ const Login = () => {
     password: '',
   });
 
+  const [error, setError] = useState('');
   const navigate = useNavigate();
 
   const handleChange = (e) => {
@@ -19,18 +20,29 @@ const Login = () => {
 
   const handleSubmit = (e) => {
     e.preventDefault();
-    // Add your login logic here (e.g., API call to authenticate the user)
-    console.log('Login Data:', formData);
 
-    // Simulate a successful login
-    // alert('Login successful! Redirecting to chat...');
-    navigate('/chat'); // Navigate to the chat route
+    // Retrieve users from local storage
+    const users = JSON.parse(localStorage.getItem('users')) || [];
+
+    // Find the user with the matching email and password
+    const user = users.find(
+      (user) => user.email === formData.email && user.password === formData.password
+    );
+
+    if (user) {
+      // Store the logged-in user's email in local storage
+      localStorage.setItem('loggedInUser', JSON.stringify(user));
+      navigate('/chat'); // Redirect to chat page
+    } else {
+      setError('Invalid email or password');
+    }
   };
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-gray-100">
       <div className="bg-white p-8 rounded-lg shadow-md w-96">
         <h2 className="text-2xl font-bold mb-6 text-center">Login</h2>
+        {error && <p className="text-red-500 text-center mb-4">{error}</p>}
         <form onSubmit={handleSubmit}>
           <div className="mb-4">
             <label className="block text-sm font-medium mb-2">Email</label>
