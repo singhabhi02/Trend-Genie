@@ -108,7 +108,7 @@ const Chat = () => {
               key={index}
               className={`my-2 p-3 rounded-lg max-w-[80%] ${
                 msg.sender === 'user'
-                  ? 'ml-auto bg-blue-500 text-white'
+                  ? 'ml-auto bg-blue-800 text-white'
                   : 'bg-gray-100 dark:bg-gray-700 text-gray-800 dark:text-white'
               }`}
             >
