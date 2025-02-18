@@ -1,10 +1,9 @@
-import React, { useState, useRef, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
+import React, { useContext, useState, useRef, useEffect } from 'react';
+import logo from '../assets/logo.png'; 
 
 const Navbar = ({ isDarkMode, toggleDarkMode, userInfo, profilePicture, handleProfilePictureUpload, onLogout }) => {
   const [isProfileDropdownOpen, setIsProfileDropdownOpen] = useState(false);
   const profileDropdownRef = useRef(null);
-  const navigate = useNavigate();
 
   // Close profile dropdown when clicking outside
   const handleClickOutside = (e) => {
@@ -18,19 +17,17 @@ const Navbar = ({ isDarkMode, toggleDarkMode, userInfo, profilePicture, handlePr
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, []);
 
-  // Handle logout
-  const handleLogout = () => {
-    onLogout(); // Clear user session or state
-    navigate('/'); // Redirect to login page
-  };
-
   return (
-    <nav className={`fixed top-0 left-0 right-0 z-50 ${isDarkMode ? 'bg-gray-800' : 'bg-gray-800'} shadow-md`}>
+    <nav className={`fixed top-0 left-0 right-0 z-50 ${isDarkMode ? 'bg-gray-800' : 'bg-white'} shadow-md`}>
       <div className="max-w-7xl mx-auto px-4 py-2 flex justify-between items-center">
-        {/* Heading on the Left */}
-        <h1 className={`text-2xl font-bold ${isDarkMode ? 'text-white' : 'text-white'}`}>
-          Trend Genie
-        </h1>
+        {/* Logo */}
+        <div className="flex items-center">
+          <img
+            src={logo} // Use your logo here
+            alt="Trend Genie Logo"
+            className="h-16 w-100" // Adjust height and width as needed
+          />
+        </div>
 
         {/* Right Side: Dark Mode Toggle and Profile Icon */}
         <div className="flex items-center gap-4">
@@ -86,7 +83,7 @@ const Navbar = ({ isDarkMode, toggleDarkMode, userInfo, profilePicture, handlePr
                 </div>
                 <div className="p-4">
                   <button
-                    onClick={handleLogout}
+                    onClick={onLogout}
                     className="w-full bg-red-500 text-white py-2 rounded-lg hover:bg-red-600"
                   >
                     Logout

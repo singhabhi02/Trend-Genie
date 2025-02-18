@@ -1,13 +1,14 @@
 import React, { useState, useEffect, useContext } from 'react';
+import moment from 'moment';
 import Navbar from '../components/Navbar';
-import { UserContext } from '../context/userContext';
+import { UserContext } from '../context/UserContext';
 import { useNavigate } from 'react-router-dom';
 
 const Chat = () => {
   const [messages, setMessages] = useState([]);
   const [input, setInput] = useState('');
   const [isDarkMode, setIsDarkMode] = useState(false);
-  const [profilePicture, setProfilePicture] = useState(null);
+  const [selectedFile, setSelectedFile] = useState(null);
   const { userInfo, setUserInfo } = useContext(UserContext);
   const navigate = useNavigate();
 
@@ -17,7 +18,7 @@ const Chat = () => {
     if (!loggedInUser) {
       navigate('/'); // Redirect to login if no user is logged in
     } else {
-      setUserInfo(loggedInUser); // Set user info in context
+      setUserInfo(loggedInUser);
     }
   }, [navigate, setUserInfo]);
 
@@ -26,7 +27,7 @@ const Chat = () => {
     setIsDarkMode(!isDarkMode);
   };
 
-  // Apply dark mode class to the body
+  // Apply dark mode class
   useEffect(() => {
     if (isDarkMode) {
       document.documentElement.classList.add('dark');
@@ -35,54 +36,71 @@ const Chat = () => {
     }
   }, [isDarkMode]);
 
-  // Handle profile picture upload
-  const handleProfilePictureUpload = (e) => {
+  // Handle file selection
+  const handleFileChange = (e) => {
     const file = e.target.files[0];
     if (file) {
       const reader = new FileReader();
       reader.onloadend = () => {
-        setProfilePicture(reader.result);
+        setSelectedFile({
+          name: file.name,
+          type: file.type,
+          url: reader.result,
+        });
       };
       reader.readAsDataURL(file);
     }
   };
 
-  // Handle logout
-  const handleLogout = () => {
-    localStorage.removeItem('loggedInUser'); // Clear logged-in user from local storage
-    setUserInfo({ name: '', email: '' }); // Clear user info in context
-    navigate('/'); // Redirect to login page
-  };
-
-  // Handle sending a message
+  // Handle sending a message (text or file)
   const handleSend = () => {
-    if (input.trim()) {
-      setMessages([...messages, { text: input, sender: 'user' }]);
+    if (input.trim() || selectedFile) {
+      const newMessage = {
+        text: input,
+        file: selectedFile, // Include file if uploaded
+        sender: 'user',
+        timestamp: moment().format('hh:mm A'),
+      };
+      setMessages([...messages, newMessage]);
       setInput('');
-      // Simulate AI response
+      setSelectedFile(null); // Clear file preview after sending
+
+      // Simulated AI Response
       setTimeout(() => {
-        setMessages((prev) => [
-          ...prev,
-          { text: 'This is a sample AI response.', sender: 'ai' },
-        ]);
+        const aiResponse = {
+          text: 'This is a sample AI response.',
+          sender: 'ai',
+          timestamp: moment().format('hh:mm A'),
+        };
+        setMessages((prev) => [...prev, aiResponse]);
       }, 1000);
     }
   };
 
+  // Handle logout
+  const handleLogout = () => {
+    localStorage.removeItem('loggedInUser');
+    setUserInfo({ name: '', email: '' });
+    navigate('/');
+  };
+
   return (
     <div className={`min-h-screen ${isDarkMode ? 'bg-gray-900' : 'bg-gray-100'} pt-16`}>
-      {/* Navbar */}
       <Navbar
         isDarkMode={isDarkMode}
         toggleDarkMode={toggleDarkMode}
         userInfo={userInfo}
-        profilePicture={profilePicture}
-        handleProfilePictureUpload={handleProfilePictureUpload}
         onLogout={handleLogout}
       />
 
       {/* Chat Interface */}
-      <div className="max-w-4xl mx-auto h-[80vh] flex flex-col">
+      <div className="max-w-4xl mx-auto h-[90vh] flex flex-col">
+        <div className="p-4 mt-4  text-center">
+          <h1 className={`text-2xl font-bold ${isDarkMode ? 'text-white' : 'text-gray-800'}`}>
+            Welcome {userInfo.name}, How may I help you?
+          </h1>
+        </div>
+
         {/* Chat Messages */}
         <div className="flex-1 overflow-y-auto p-4 bg-white dark:bg-gray-800 rounded-lg shadow-md">
           {messages.map((msg, index) => (
@@ -94,36 +112,66 @@ const Chat = () => {
                   : 'bg-gray-100 dark:bg-gray-700 text-gray-800 dark:text-white'
               }`}
             >
-              {msg.text}
+              {msg.text && <div className="text-sm">{msg.text}</div>}
+              {msg.file && (
+                <div className="mt-2">
+                  {msg.file.type.startsWith('image') ? (
+                    <img src={msg.file.url} alt={msg.file.name} className="w-32 h-32 rounded-lg" />
+                  ) : (
+                    <a href={msg.file.url} download className="text-blue-400 underline">
+                      {msg.file.name}
+                    </a>
+                  )}
+                </div>
+              )}
+              <div className="text-xs mt-1 text-right">{msg.timestamp}</div>
             </div>
           ))}
         </div>
 
+        {/* File Preview */}
+        {selectedFile && (
+          <div className="flex items-center gap-3 p-2 border rounded-lg mt-2 bg-gray-200 dark:bg-gray-700">
+            {selectedFile.type.startsWith('image') ? (
+              <img src={selectedFile.url} alt="preview" className="w-12 h-12 rounded-lg" />
+            ) : (
+              <span className="text-sm">{selectedFile.name}</span>
+            )}
+            <button onClick={() => setSelectedFile(null)} className="text-red-500 text-xs">
+              ✖ Remove
+            </button>
+          </div>
+        )}
+
         {/* Input Area */}
-        <div className="mt-4 flex gap-2">
+        <div className="mt-4 flex items-center gap-2 border rounded-lg p-2 bg-white dark:bg-gray-700">
           <input
             type="text"
             value={input}
             onChange={(e) => setInput(e.target.value)}
-            className={`flex-1 p-2 border rounded-lg ${
-              isDarkMode ? 'bg-gray-700 text-white border-gray-600' : 'bg-white text-gray-800 border-gray-300'
-            }`}
-            placeholder="Ask me anything..."
+            onKeyDown={(e) => e.key === 'Enter' && handleSend()} // Send message on Enter key
+            className="flex-1 p-2 bg-transparent outline-none text-gray-800 dark:text-white"
+            placeholder="Type a message..."
           />
+
+          {/* Send Button */}
           <button
             onClick={handleSend}
-            className={`p-2 rounded-lg ${
-              isDarkMode ? 'bg-blue-600 text-white' : 'bg-blue-500 text-white'
-            } hover:bg-blue-600`}
+            className="p-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600"
           >
-            Send
+            ➤
           </button>
+
+          {/* File Upload Button */}
+          <label htmlFor="file-upload" className="cursor-pointer p-2 text-gray-500 hover:text-blue-500">
+            📎
+          </label>
           <input
             type="file"
-            className={`p-2 border rounded-lg ${
-              isDarkMode ? 'bg-gray-700 text-white border-gray-600' : 'bg-white text-gray-800 border-gray-300'
-            }`}
-            accept="image/*"
+            id="file-upload"
+            className="hidden"
+            accept="image/*, .pdf, .docx"
+            onChange={handleFileChange}
           />
         </div>
       </div>
