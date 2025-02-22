@@ -20,27 +20,25 @@ const Login = () => {
     });
   };
 
-  const handleSubmit = async (e) => {
-    e.preventDefault();
-    try {
-      const response = await login(formData);
-      // Assuming the API returns user data along with token
-      const userData = {
-        token: response.data.token,
-        email: formData.email,
-        name: formData.name,
-        // Add other user info if returned by the API (e.g., name)
-      };
-      console.log(userData)
-      
-      localStorage.setItem("loggedInUser", JSON.stringify(userData)); // Store user data
-      
-      console.log('Login successful, redirecting to /chat');
-      navigate("/chat");
-    } catch (error) {
-      setError(error.response?.data?.message || "Login failed"); // Handle errors
-    }
-  };
+ const handleSubmit = async (e) => {
+  e.preventDefault();
+  try {
+    const response = await login(formData);
+    const userData = {
+      token: response.data.token,
+      email: response.data.email,
+      name: response.data.name, // Now correctly gets name from API
+    };
+    console.log(userData);
+
+    localStorage.setItem("loggedInUser", JSON.stringify(userData)); // Store user data
+
+    navigate("/chat");
+  } catch (error) {
+    setError(error.response?.data?.message || "Login failed");
+  }
+};
+
 
   return (
     <div
