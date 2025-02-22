@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useContext, useRef } from "react";
+import  { useState, useEffect, useContext, useRef } from "react";
 import moment from "moment";
 import { useNavigate } from "react-router-dom";
 import { UserContext } from "../context/UserContext";
@@ -23,13 +23,11 @@ const Chat = () => {
 
   useEffect(() => {
     const loggedInUser = JSON.parse(localStorage.getItem("loggedInUser"));
-    console.log(loggedInUser, "hello");
-    if (!loggedInUser) {
-      navigate("/");
-    } else {
+    if (loggedInUser) {
       setUserInfo(loggedInUser);
     }
-  }, [navigate, setUserInfo]);
+    // Removed navigation logic since ProtectedRoute handles it
+  }, [setUserInfo]);
 
   useEffect(() => {
     document.documentElement.classList.toggle("dark", isDarkMode);
@@ -50,7 +48,7 @@ const Chat = () => {
     if (input.trim() || selectedFile) {
       let fileUrl = null;
       if (selectedFile) {
-        fileUrl = URL.createObjectURL(selectedFile); // Create a temporary URL for preview
+        fileUrl = URL.createObjectURL(selectedFile);
       }
 
       const newMessage = {
@@ -112,9 +110,11 @@ const Chat = () => {
   const handleKeyPress = (e) => {
     if (e.key === "Enter" && !e.shiftKey) {
       e.preventDefault();
-      handleSend(); // Trigger send on Enter key
+      handleSend();
     }
   };
+
+  console.log(userInfo.name, "name")
 
   const renderMessageContent = (msg) => {
     return (
@@ -151,12 +151,10 @@ const Chat = () => {
         isDarkMode={isDarkMode}
         toggleDarkMode={() => setIsDarkMode(!isDarkMode)}
         userInfo={userInfo}
-        onLogout={() =>{
-          localStorage.removeItem('token'); // Clear the token
-          localStorage.clear(); // Clear the localStorage
-
-          navigate("/")}
-        }
+        onLogout={() => {
+          localStorage.removeItem('loggedInUser'); // Clear user data
+          navigate("/");
+        }}
         className="fixed top-0 left-0 right-0 z-50 h-16"
       />
 
@@ -178,6 +176,7 @@ const Chat = () => {
               animate={{ opacity: 1 }}
               className="text-2xl font-semibold text-center text-white p-4 mt-16"
             >
+              
               Welcome {userInfo?.name || "User"}, How may I assist you?
             </motion.h1>
 

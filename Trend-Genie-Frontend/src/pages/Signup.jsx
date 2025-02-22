@@ -1,7 +1,7 @@
-import React, { useState } from "react";
+import  { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { signup } from "../services/api"; // Import the signup API
-import aiBackground from "../assets/ai-background.jpg"; // Import the background image
+import { signup } from "../services/api";
+import aiBackground from "../assets/ai-background.jpg";
 
 const Signup = () => {
   const [formData, setFormData] = useState({
@@ -24,13 +24,17 @@ const Signup = () => {
   const handleSubmit = async (e) => {
     e.preventDefault();
     try {
-      const response = await signup(formData); // Call the signup API
-      localStorage.removeItem("token"); // Clear old token
-      localStorage.setItem("token", response.data.token); // Save the new token
-      navigate("/chat"); // Redirect to chat page
+      const response = await signup(formData);
+      const userData = {
+        token: response.data.token,
+        name: formData.name,
+        email: formData.email,
+      };
+      localStorage.setItem("loggedInUser", JSON.stringify(userData)); // Store user data
+      navigate("/chat");
     } catch (error) {
       console.log(error);
-      setError(error.response?.data?.message || "Signup failed"); // Handle errors
+      setError(error.response?.data?.message || "Signup failed");
     }
   };
 

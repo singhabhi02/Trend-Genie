@@ -1,7 +1,7 @@
-import React, { useState } from "react";
+import { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { login } from "../services/api"; // Import the login API
-import aiBackground from "../assets/ai-background.jpg"; // Import the background image
+import { login } from "../services/api";
+import aiBackground from "../assets/ai-background.jpg";
 
 const Login = () => {
   const [formData, setFormData] = useState({
@@ -10,7 +10,7 @@ const Login = () => {
   });
 
   const [error, setError] = useState("");
-  const navigate = useNavigate(); // Use the navigate hook from react-router-dom
+  const navigate = useNavigate();
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -23,12 +23,20 @@ const Login = () => {
   const handleSubmit = async (e) => {
     e.preventDefault();
     try {
-      const response = await login(formData); // Call the login API
-      // console.log(response, login(formData),  "response");
-      // localStorage.removeItem("token"); // Clear old token
-      localStorage.setItem("token", response.data.token); // Save the new token
-      console.log('Login successful, redirecting to /chat'); // Debugging
-      navigate("/chat") // Redirect to chat page
+      const response = await login(formData);
+      // Assuming the API returns user data along with token
+      const userData = {
+        token: response.data.token,
+        email: formData.email,
+        name: formData.name,
+        // Add other user info if returned by the API (e.g., name)
+      };
+      console.log(userData)
+      
+      localStorage.setItem("loggedInUser", JSON.stringify(userData)); // Store user data
+      
+      console.log('Login successful, redirecting to /chat');
+      navigate("/chat");
     } catch (error) {
       setError(error.response?.data?.message || "Login failed"); // Handle errors
     }
@@ -81,7 +89,7 @@ const Login = () => {
           </button>
         </form>
         <p className="mt-4 text-center text-white">
-          Don't have an account?{" "}
+          Dont have an account?{" "}
           <a href="/signup" className="text-blue-400 hover:text-blue-300">
             Sign Up
           </a>
