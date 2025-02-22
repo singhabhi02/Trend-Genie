@@ -12,7 +12,7 @@ const Sidebar = ({
   startNewChat,
   deleteChat,
 }) => {
-  console.log("startNewChat prop:", startNewChat); // Debug
+  // console.log("startNewChat prop:", startNewChat); // Debug
 
   return (
     <div className="relative w-72 min-h-screen bg-gray-100 dark:bg-gray-900 border-r border-gray-300 dark:border-gray-700 flex flex-col">

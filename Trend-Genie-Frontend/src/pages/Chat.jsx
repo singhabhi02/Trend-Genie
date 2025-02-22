@@ -23,6 +23,7 @@ const Chat = () => {
 
   useEffect(() => {
     const loggedInUser = JSON.parse(localStorage.getItem("loggedInUser"));
+    console.log(loggedInUser, "hello");
     if (!loggedInUser) {
       navigate("/");
     } else {
@@ -150,7 +151,12 @@ const Chat = () => {
         isDarkMode={isDarkMode}
         toggleDarkMode={() => setIsDarkMode(!isDarkMode)}
         userInfo={userInfo}
-        onLogout={() => navigate("/")}
+        onLogout={() =>{
+          localStorage.removeItem('token'); // Clear the token
+          localStorage.clear(); // Clear the localStorage
+
+          navigate("/")}
+        }
         className="fixed top-0 left-0 right-0 z-50 h-16"
       />
 

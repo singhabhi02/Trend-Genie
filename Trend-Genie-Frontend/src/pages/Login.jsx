@@ -1,17 +1,16 @@
-import React, { useState, useContext } from 'react';
-import { useNavigate } from 'react-router-dom';
-import { ThemeContext } from '../context/ThemeProvider';
-import aiBackground from '../assets/ai-background.jpg'; // Import the background image
+import React, { useState } from "react";
+import { useNavigate } from "react-router-dom";
+import { login } from "../services/api"; // Import the login API
+import aiBackground from "../assets/ai-background.jpg"; // Import the background image
 
 const Login = () => {
   const [formData, setFormData] = useState({
-    email: '',
-    password: '',
+    email: "",
+    password: "",
   });
 
-  const [error, setError] = useState('');
-  const navigate = useNavigate();
-  // const { isDarkMode, toggleDarkMode } = useContext(ThemeContext);
+  const [error, setError] = useState("");
+  const navigate = useNavigate(); // Use the navigate hook from react-router-dom
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -21,23 +20,17 @@ const Login = () => {
     });
   };
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
-
-    // Retrieve users from local storage
-    const users = JSON.parse(localStorage.getItem('users')) || [];
-
-    // Find the user with the matching email and password
-    const user = users.find(
-      (user) => user.email === formData.email && user.password === formData.password
-    );
-
-    if (user) {
-      // Store the logged-in user's email in local storage
-      localStorage.setItem('loggedInUser', JSON.stringify(user));
-      navigate('/chat'); // Redirect to chat page
-    } else {
-      setError('Invalid email or password');
+    try {
+      const response = await login(formData); // Call the login API
+      // console.log(response, login(formData),  "response");
+      // localStorage.removeItem("token"); // Clear old token
+      localStorage.setItem("token", response.data.token); // Save the new token
+      console.log('Login successful, redirecting to /chat'); // Debugging
+      navigate("/chat") // Redirect to chat page
+    } catch (error) {
+      setError(error.response?.data?.message || "Login failed"); // Handle errors
     }
   };
 
@@ -47,19 +40,15 @@ const Login = () => {
       style={{ backgroundImage: `url(${aiBackground})` }}
     >
       <div className="bg-black bg-opacity-70 p-8 rounded-lg shadow-lg w-96 relative">
-        {/* Dark Mode Toggle Button */}
-        <button
-          // onClick={toggleDarkMode}
-          className="absolute top-4 right-4 p-2 rounded-full bg-gray-800 text-white hover:bg-gray-700"
-        >
-          {/* {isDarkMode ? '🌙' : '☀️'} */}
-        </button>
-
-        <h2 className="text-2xl font-bold mb-6 text-center text-white">Login</h2>
+        <h2 className="text-2xl font-bold mb-6 text-center text-white">
+          Login
+        </h2>
         {error && <p className="text-red-500 text-center mb-4">{error}</p>}
         <form onSubmit={handleSubmit}>
           <div className="mb-4">
-            <label className="block text-sm font-medium mb-2 text-white">Email</label>
+            <label className="block text-sm font-medium mb-2 text-white">
+              Email
+            </label>
             <input
               type="email"
               name="email"
@@ -71,7 +60,9 @@ const Login = () => {
             />
           </div>
           <div className="mb-6">
-            <label className="block text-sm font-medium mb-2 text-white">Password</label>
+            <label className="block text-sm font-medium mb-2 text-white">
+              Password
+            </label>
             <input
               type="password"
               name="password"
@@ -90,7 +81,7 @@ const Login = () => {
           </button>
         </form>
         <p className="mt-4 text-center text-white">
-          Don't have an account?{' '}
+          Don't have an account?{" "}
           <a href="/signup" className="text-blue-400 hover:text-blue-300">
             Sign Up
           </a>

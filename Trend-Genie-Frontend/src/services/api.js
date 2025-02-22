@@ -1,9 +1,14 @@
 import axios from "axios";
 
 const API = axios.create({
-  baseURL: "http://localhost:5000", // Backend URL
+  baseURL: "http://localhost:5000/api/auth", // Backend URL
 });
 
-export const login = (userData) => API.post("/api/login", userData);
-export const signup = (userData) => API.post("/api/signup", userData);
-export const getTrends = () => API.get("/api/trends");
+//Signup API
+export const signup = (userData) => API.post("/signup", userData);
+
+//Login API
+export const login = (userData) => API.post("/login", userData);
+export const getTrends = () => API.get("/trends");
+
+export default API;

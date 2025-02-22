@@ -1,17 +1,17 @@
-import React, { useState, useContext } from 'react';
-import { useNavigate } from 'react-router-dom';
-import { ThemeContext } from '../context/ThemeProvider';
-import aiBackground from '../assets/ai-background.jpg'; // Import the background image
+import React, { useState } from "react";
+import { useNavigate } from "react-router-dom";
+import { signup } from "../services/api"; // Import the signup API
+import aiBackground from "../assets/ai-background.jpg"; // Import the background image
 
 const Signup = () => {
   const [formData, setFormData] = useState({
-    name: '',
-    email: '',
-    password: '',
+    name: "",
+    email: "",
+    password: "",
   });
 
+  const [error, setError] = useState("");
   const navigate = useNavigate();
-  // const { isDarkMode, toggleDarkMode } = useContext(ThemeContext);
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -21,21 +21,17 @@ const Signup = () => {
     });
   };
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
-
-    // Store user data in local storage
-    const users = JSON.parse(localStorage.getItem('users')) || [];
-    const newUser = {
-      name: formData.name,
-      email: formData.email,
-      password: formData.password,
-    };
-    users.push(newUser);
-    localStorage.setItem('users', JSON.stringify(users));
-
-    // Redirect to login page
-    navigate('/');
+    try {
+      const response = await signup(formData); // Call the signup API
+      localStorage.removeItem("token"); // Clear old token
+      localStorage.setItem("token", response.data.token); // Save the new token
+      navigate("/chat"); // Redirect to chat page
+    } catch (error) {
+      console.log(error);
+      setError(error.response?.data?.message || "Signup failed"); // Handle errors
+    }
   };
 
   return (
@@ -44,18 +40,15 @@ const Signup = () => {
       style={{ backgroundImage: `url(${aiBackground})` }}
     >
       <div className="bg-black bg-opacity-70 p-8 rounded-lg shadow-lg w-96 relative">
-        {/* Dark Mode Toggle Button */}
-        <button
-          // onClick={toggleDarkMode}
-          className="absolute top-4 right-4 p-2 rounded-full bg-gray-800 text-white hover:bg-gray-700"
-        >
-          {/* {isDarkMode ? '🌙' : '☀️'} */}
-        </button>
-
-        <h2 className="text-2xl font-bold mb-6 text-center text-white">Sign Up</h2>
+        <h2 className="text-2xl font-bold mb-6 text-center text-white">
+          Sign Up
+        </h2>
+        {error && <p className="text-red-500 text-center mb-4">{error}</p>}
         <form onSubmit={handleSubmit}>
           <div className="mb-4">
-            <label className="block text-sm font-medium mb-2 text-white">Name</label>
+            <label className="block text-sm font-medium mb-2 text-white">
+              Name
+            </label>
             <input
               type="text"
               name="name"
@@ -67,7 +60,9 @@ const Signup = () => {
             />
           </div>
           <div className="mb-4">
-            <label className="block text-sm font-medium mb-2 text-white">Email</label>
+            <label className="block text-sm font-medium mb-2 text-white">
+              Email
+            </label>
             <input
               type="email"
               name="email"
@@ -79,7 +74,9 @@ const Signup = () => {
             />
           </div>
           <div className="mb-6">
-            <label className="block text-sm font-medium mb-2 text-white">Password</label>
+            <label className="block text-sm font-medium mb-2 text-white">
+              Password
+            </label>
             <input
               type="password"
               name="password"
@@ -98,7 +95,7 @@ const Signup = () => {
           </button>
         </form>
         <p className="mt-4 text-center text-white">
-          Already have an account?{' '}
+          Already have an account?{" "}
           <a href="/" className="text-blue-400 hover:text-blue-300">
             Login
           </a>
