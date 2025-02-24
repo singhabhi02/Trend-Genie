@@ -5,7 +5,7 @@ import { UserContext } from "../context/UserContext";
 import { Card, CardContent } from "../components/ui/card";
 import { Input } from "../components/ui/input";
 import { Button } from "../components/ui/button";
-import { motion } from "framer-motion";
+import { motion, AnimatePresence } from "framer-motion";
 import { ScrollArea } from "../components/ui/scroll-area";
 import { Paperclip, Send } from "lucide-react";
 import Navbar from "../components/Navbar";
@@ -17,13 +17,18 @@ const Chat = () => {
   const [input, setInput] = useState("");
   const [selectedFile, setSelectedFile] = useState(null);
   const [isDarkMode, setIsDarkMode] = useState(false);
+  const [isJustLoggedIn, setIsJustLoggedIn] = useState(false);
+  const [isCollapsed, setIsCollapsed] = useState(false); // Added state for sidebar collapse
   const { userInfo, setUserInfo } = useContext(UserContext);
   const navigate = useNavigate();
   const chatEndRef = useRef(null);
 
   useEffect(() => {
     const loggedInUser = JSON.parse(localStorage.getItem("loggedInUser"));
-    if (loggedInUser) setUserInfo(loggedInUser);
+    if (loggedInUser) {
+      setUserInfo(loggedInUser);
+      setIsJustLoggedIn(true);
+    }
   }, [setUserInfo]);
 
   useEffect(() => {
@@ -65,6 +70,7 @@ const Chat = () => {
 
       setInput("");
       setSelectedFile(null);
+      setIsJustLoggedIn(false);
 
       setTimeout(() => {
         setChatSessions((prevSessions) =>
@@ -135,7 +141,7 @@ const Chat = () => {
   );
 
   return (
-    <div className="h-screen flex flex-col bg-gray-900 text-white overflow-hidden">
+    <div className={`h-screen flex flex-col overflow-hidden ${isDarkMode ? "bg-gray-900 text-white" : "bg-gray-100 text-gray-900"}`}>
       <Navbar
         isDarkMode={isDarkMode}
         toggleDarkMode={() => setIsDarkMode(!isDarkMode)}
@@ -144,35 +150,53 @@ const Chat = () => {
           localStorage.removeItem("loggedInUser");
           navigate("/");
         }}
-        className="fixed top-0 left-0 right-0 z-50 h-16 bg-gray-800 shadow-md"
+        className={`fixed top-0 left-0 right-0 z-50 h-16 shadow-md ${isDarkMode ? "bg-gray-800" : "bg-white"}`}
       />
 
-      <div className="flex flex-1 overflow-hidden pt-16"> {/* Added pt-16 to shift content below navbar */}
-        <div className="fixed top-16 left-0 h-[calc(100vh-64px)] w-64 bg-gray-800 shadow-lg">
+      <div className="flex flex-1 overflow-hidden pt-16">
+        <div
+          className={`fixed top-16 left-0 h-[calc(100vh-64px)] shadow-lg transition-all duration-300 ${
+            isCollapsed ? "w-16" : "w-64"
+          } ${isDarkMode ? "bg-gray-900" : "bg-white"}`}
+        >
           <Sidebar
             chatSessions={chatSessions}
             activeChat={activeChat}
             setActiveChat={setActiveChat}
             startNewChat={startNewChat}
             deleteChat={deleteChat}
+            isCollapsed={isCollapsed}
+            setIsCollapsed={setIsCollapsed}
           />
         </div>
 
-        <Card className="flex-1 ml-64 bg-gray-850 border-none shadow-xl">
+        <Card
+          className={`flex-1 border-none shadow-xl transition-all duration-300 ${
+            isCollapsed ? "ml-16" : "ml-64"
+          } ${isDarkMode ? "bg-gray-850" : "bg-white"}`}
+        >
           <CardContent className="flex flex-col h-full p-0">
-            <motion.h1
-              initial={{ opacity: 0, y: -20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.5 }}
-              className="text-xl font-light text-gray-300 text-center py-6 bg-gray-800/50 border-b border-gray-700"
+            <ScrollArea
+              className={`flex-1 p-6 ${isDarkMode ? "bg-gradient-to-b from-gray-850 to-gray-900" : "bg-gradient-to-b from-white to-gray-50"}`}
             >
-              Welcome {userInfo?.name || "User"}, How may I assist you today?
-            </motion.h1>
-
-            <ScrollArea className="flex-1 p-6 bg-gradient-to-b from-gray-850 to-gray-900">
               {chatSessions[activeChat]?.messages.length === 0 ? (
-                <div className="text-center text-gray-500 mt-20">
-                  Start a conversation by typing below...
+                <div className="text-center mt-20">
+                  <AnimatePresence>
+                    {isJustLoggedIn && userInfo && (
+                      <motion.div
+                        initial={{ opacity: 0, y: 20 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        exit={{ opacity: 0, y: -20 }}
+                        transition={{ duration: 0.5 }}
+                        className={`text-2xl font-medium ${isDarkMode ? "text-gray-300" : "text-gray-700"}`}
+                      >
+                        Welcome {userInfo?.name || "User"}, How may I assist you today?
+                      </motion.div>
+                    )}
+                  </AnimatePresence>
+                  <div className={`mt-4 ${isDarkMode ? "text-gray-500" : "text-gray-400"}`}>
+                    Start a conversation by typing below...
+                  </div>
                 </div>
               ) : (
                 chatSessions[activeChat]?.messages.map((msg, index) => (
@@ -181,15 +205,17 @@ const Chat = () => {
                     initial={{ opacity: 0, y: 20 }}
                     animate={{ opacity: 1, y: 0 }}
                     transition={{ duration: 0.3 }}
-                    className={`flex mb-6 ${
-                      msg.sender === "user" ? "justify-end" : "justify-start"
-                    }`}
+                    className={`flex mb-6 ${msg.sender === "user" ? "justify-end" : "justify-start"}`}
                   >
                     <div
                       className={`max-w-2xl p-4 rounded-xl shadow-sm ${
                         msg.sender === "user"
-                          ? "bg-blue-600 text-white"
-                          : "bg-gray-700 text-gray-100"
+                          ? isDarkMode
+                            ? "bg-blue-600 text-white"
+                            : "bg-blue-500 text-white"
+                          : isDarkMode
+                          ? "bg-gray-700 text-gray-100"
+                          : "bg-gray-200 text-gray-900"
                       }`}
                     >
                       {renderMessageContent(msg)}
@@ -200,17 +226,21 @@ const Chat = () => {
               <div ref={chatEndRef} />
             </ScrollArea>
 
-            <div className="p-4 bg-gray-800 border-t border-gray-700 flex items-center gap-3">
+            <div
+              className={`p-4 border-t flex items-center gap-3 ${isDarkMode ? "bg-gray-800 border-gray-700" : "bg-white border-gray-200"}`}
+            >
               <Input
                 value={input}
                 onChange={(e) => setInput(e.target.value)}
                 onKeyDown={handleKeyPress}
                 placeholder="Ask Trend Genie..."
-                className="flex-1 bg-gray-700 text-white placeholder-gray-400 border-none rounded-full px-5 py-3 focus:ring-2 focus:ring-blue-500"
+                className={`flex-1 border-none rounded-full px-5 py-3 focus:ring-2 focus:ring-blue-500 ${
+                  isDarkMode ? "bg-gray-700 text-white placeholder-gray-400" : "bg-gray-100 text-gray-900 placeholder-gray-500"
+                }`}
               />
               <label
                 htmlFor="file-upload"
-                className="p-2 text-gray-400 hover:text-blue-400 cursor-pointer"
+                className={`p-2 ${isDarkMode ? "text-gray-400 hover:text-blue-400" : "text-gray-600 hover:text-blue-500"} cursor-pointer`}
               >
                 <Paperclip size={20} />
               </label>
@@ -222,13 +252,13 @@ const Chat = () => {
                 onChange={handleFileChange}
               />
               {selectedFile && (
-                <span className="text-sm text-gray-400 truncate max-w-xs">
+                <span className={`text-sm truncate max-w-xs ${isDarkMode ? "text-gray-400" : "text-gray-600"}`}>
                   {selectedFile.name}
                 </span>
               )}
               <Button
                 onClick={handleSend}
-                className="p-3 bg-blue-600 hover:bg-blue-700 rounded-full"
+                className={`p-3 rounded-full ${isDarkMode ? "bg-blue-600 hover:bg-blue-700" : "bg-blue-500 hover:bg-blue-600"}`}
               >
                 <Send size={20} />
               </Button>
