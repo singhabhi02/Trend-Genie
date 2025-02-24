@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { login } from "../services/api";
-import aiBackground from "../assets/ai-background.jpg";
+import aiBackground from "../assets/ai-background.png";
 
 const Login = () => {
   const [formData, setFormData] = useState({
@@ -20,31 +20,32 @@ const Login = () => {
     });
   };
 
- const handleSubmit = async (e) => {
-  e.preventDefault();
-  try {
-    const response = await login(formData);
-    const userData = {
-      token: response.data.token,
-      email: response.data.email,
-      name: response.data.name, // Now correctly gets name from API
-    };
-    console.log(userData);
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    try {
+      const response = await login(formData);
+      const userData = {
+        token: response.data.token,
+        email: response.data.email,
+        name: response.data.name, // Now correctly gets name from API
+      };
+      localStorage.setItem("loggedInUser", JSON.stringify(userData)); // Store user data
 
-    localStorage.setItem("loggedInUser", JSON.stringify(userData)); // Store user data
-
-    navigate("/chat");
-  } catch (error) {
-    setError(error.response?.data?.message || "Login failed");
-  }
-};
-
+      navigate("/chat");
+    } catch (error) {
+      setError(error.response?.data?.message || "Login failed");
+    }
+  };
 
   return (
     <div
       className="min-h-screen flex items-center justify-center bg-cover bg-center"
       style={{ backgroundImage: `url(${aiBackground})` }}
     >
+      {/* Trend-Genie heading in top-left of the main screen */}
+      <h1 className="absolute top-4 left-4 text-3xl font-bold text-white">
+        Trend-Genie
+      </h1>
       <div className="bg-black bg-opacity-70 p-8 rounded-lg shadow-lg w-96 relative">
         <h2 className="text-2xl font-bold mb-6 text-center text-white">
           Login
@@ -86,6 +87,14 @@ const Login = () => {
             Login
           </button>
         </form>
+        <div className="mt-2 text-right">
+          <a
+            href="/forgot-password"
+            className="text-blue-400 hover:text-blue-300"
+          >
+            Forgot Password?
+          </a>
+        </div>
         <p className="mt-4 text-center text-white">
           Dont have an account?{" "}
           <a href="/signup" className="text-blue-400 hover:text-blue-300">

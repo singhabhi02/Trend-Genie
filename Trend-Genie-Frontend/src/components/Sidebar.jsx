@@ -12,10 +12,9 @@ const Sidebar = ({
   startNewChat,
   deleteChat,
 }) => {
-  // console.log("startNewChat prop:", startNewChat); // Debug
 
   return (
-    <div className="relative w-72 min-h-screen bg-gray-100 dark:bg-gray-900 border-r border-gray-300 dark:border-gray-700 flex flex-col">
+    <div className="relative w-100 min-h-screen bg-gray-100 dark:bg-gray-900 border-r border-gray-300 dark:border-gray-700 flex flex-col">
       {/* Sidebar Header */}
       <div className="p-4 border-b border-gray-300 dark:border-gray-700 flex justify-between items-center">
         <h2 className="text-lg font-bold text-gray-900 dark:text-white">

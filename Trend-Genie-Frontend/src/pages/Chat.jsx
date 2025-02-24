@@ -1,4 +1,4 @@
-import  { useState, useEffect, useContext, useRef } from "react";
+import { useState, useEffect, useContext, useRef } from "react";
 import moment from "moment";
 import { useNavigate } from "react-router-dom";
 import { UserContext } from "../context/UserContext";
@@ -23,10 +23,7 @@ const Chat = () => {
 
   useEffect(() => {
     const loggedInUser = JSON.parse(localStorage.getItem("loggedInUser"));
-    if (loggedInUser) {
-      setUserInfo(loggedInUser);
-    }
-    // Removed navigation logic since ProtectedRoute handles it
+    if (loggedInUser) setUserInfo(loggedInUser);
   }, [setUserInfo]);
 
   useEffect(() => {
@@ -39,17 +36,13 @@ const Chat = () => {
 
   const handleFileChange = (e) => {
     const file = e.target.files[0];
-    if (file) {
-      setSelectedFile(file);
-    }
+    if (file) setSelectedFile(file);
   };
 
   const handleSend = () => {
     if (input.trim() || selectedFile) {
       let fileUrl = null;
-      if (selectedFile) {
-        fileUrl = URL.createObjectURL(selectedFile);
-      }
+      if (selectedFile) fileUrl = URL.createObjectURL(selectedFile);
 
       const newMessage = {
         text: input,
@@ -114,36 +107,32 @@ const Chat = () => {
     }
   };
 
-  console.log(userInfo.name, "name")
-
-  const renderMessageContent = (msg) => {
-    return (
-      <>
-        {msg.text && <div className="text-sm">{msg.text}</div>}
-        {msg.file && (
-          <div className="mt-2">
-            {msg.file.type.startsWith("image/") ? (
-              <img
-                src={msg.file.url}
-                alt={msg.file.name}
-                className="max-w-full h-auto rounded-lg"
-                style={{ maxHeight: "200px" }}
-              />
-            ) : (
-              <a
-                href={msg.file.url}
-                download={msg.file.name}
-                className="text-blue-400 underline"
-              >
-                {msg.file.name}
-              </a>
-            )}
-          </div>
-        )}
-        <div className="text-xs mt-1 text-right opacity-75">{msg.timestamp}</div>
-      </>
-    );
-  };
+  const renderMessageContent = (msg) => (
+    <div className="flex flex-col">
+      {msg.text && <div className="text-base leading-relaxed">{msg.text}</div>}
+      {msg.file && (
+        <div className="mt-2">
+          {msg.file.type.startsWith("image/") ? (
+            <img
+              src={msg.file.url}
+              alt={msg.file.name}
+              className="max-w-full h-auto rounded-md shadow-sm"
+              style={{ maxHeight: "250px" }}
+            />
+          ) : (
+            <a
+              href={msg.file.url}
+              download={msg.file.name}
+              className="text-blue-400 hover:underline"
+            >
+              {msg.file.name}
+            </a>
+          )}
+        </div>
+      )}
+      <div className="text-xs opacity-60 mt-1 text-right">{msg.timestamp}</div>
+    </div>
+  );
 
   return (
     <div className="h-screen flex flex-col bg-gray-900 text-white overflow-hidden">
@@ -152,14 +141,14 @@ const Chat = () => {
         toggleDarkMode={() => setIsDarkMode(!isDarkMode)}
         userInfo={userInfo}
         onLogout={() => {
-          localStorage.removeItem('loggedInUser'); // Clear user data
+          localStorage.removeItem("loggedInUser");
           navigate("/");
         }}
-        className="fixed top-0 left-0 right-0 z-50 h-16"
+        className="fixed top-0 left-0 right-0 z-50 h-16 bg-gray-800 shadow-md"
       />
 
-      <div className="flex h-[calc(100vh-64px)]">
-        <div className="fixed top-16 left-0 h-[calc(100vh-64px)] w-70 bg-gray-800 overflow-y-auto">
+      <div className="flex flex-1 overflow-hidden pt-16"> {/* Added pt-16 to shift content below navbar */}
+        <div className="fixed top-16 left-0 h-[calc(100vh-64px)] w-64 bg-gray-800 shadow-lg">
           <Sidebar
             chatSessions={chatSessions}
             activeChat={activeChat}
@@ -169,61 +158,61 @@ const Chat = () => {
           />
         </div>
 
-        <Card className="flex flex-col h-[calc(100vh)] w-[calc(100vw-10rem)] ml-80 max-w-7xl rounded-none bg-gray-800 shadow-lg">
-          <CardContent className="flex flex-col h-full p-0 w-full">
+        <Card className="flex-1 ml-64 bg-gray-850 border-none shadow-xl">
+          <CardContent className="flex flex-col h-full p-0">
             <motion.h1
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              className="text-2xl font-semibold text-center text-white p-4 mt-16"
+              initial={{ opacity: 0, y: -20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.5 }}
+              className="text-xl font-light text-gray-300 text-center py-6 bg-gray-800/50 border-b border-gray-700"
             >
-              
-              Welcome {userInfo?.name || "User"}, How may I assist you?
+              Welcome {userInfo?.name || "User"}, How may I assist you today?
             </motion.h1>
 
-            <ScrollArea className="flex-1 overflow-y-auto p-4 space-y-3">
-              {chatSessions[activeChat]?.messages.map((msg, index) => (
-                <motion.div
-                  key={index}
-                  initial={{ opacity: 0, y: 10 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ duration: 0.3 }}
-                  className={`flex ${
-                    msg.sender === "user" ? "justify-end" : "justify-start"
-                  }`}
-                >
-                  <div
-                    className={`relative p-3 rounded-lg max-w-xs md:max-w-md ${
-                      msg.sender === "user"
-                        ? "bg-blue-600 text-white"
-                        : "bg-gray-700 text-white"
+            <ScrollArea className="flex-1 p-6 bg-gradient-to-b from-gray-850 to-gray-900">
+              {chatSessions[activeChat]?.messages.length === 0 ? (
+                <div className="text-center text-gray-500 mt-20">
+                  Start a conversation by typing below...
+                </div>
+              ) : (
+                chatSessions[activeChat]?.messages.map((msg, index) => (
+                  <motion.div
+                    key={index}
+                    initial={{ opacity: 0, y: 20 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ duration: 0.3 }}
+                    className={`flex mb-6 ${
+                      msg.sender === "user" ? "justify-end" : "justify-start"
                     }`}
                   >
-                    {renderMessageContent(msg)}
-                  </div>
-                </motion.div>
-              ))}
+                    <div
+                      className={`max-w-2xl p-4 rounded-xl shadow-sm ${
+                        msg.sender === "user"
+                          ? "bg-blue-600 text-white"
+                          : "bg-gray-700 text-gray-100"
+                      }`}
+                    >
+                      {renderMessageContent(msg)}
+                    </div>
+                  </motion.div>
+                ))
+              )}
               <div ref={chatEndRef} />
             </ScrollArea>
 
-            <div className="p-3 bg-gray-800 border-t border-gray-700 flex items-center gap-3 w-full">
+            <div className="p-4 bg-gray-800 border-t border-gray-700 flex items-center gap-3">
               <Input
                 value={input}
                 onChange={(e) => setInput(e.target.value)}
                 onKeyDown={handleKeyPress}
-                placeholder="Message Trend-Genie..."
-                className="flex-1 bg-gray-700 text-white placeholder-gray-400 px-4 py-2 rounded-lg"
+                placeholder="Ask Trend Genie..."
+                className="flex-1 bg-gray-700 text-white placeholder-gray-400 border-none rounded-full px-5 py-3 focus:ring-2 focus:ring-blue-500"
               />
-              <Button
-                onClick={handleSend}
-                className="p-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
-              >
-                <Send size={18} />
-              </Button>
               <label
                 htmlFor="file-upload"
-                className="cursor-pointer p-3 text-gray-400 hover:text-blue-500"
+                className="p-2 text-gray-400 hover:text-blue-400 cursor-pointer"
               >
-                <Paperclip size={18} />
+                <Paperclip size={20} />
               </label>
               <input
                 type="file"
@@ -233,10 +222,16 @@ const Chat = () => {
                 onChange={handleFileChange}
               />
               {selectedFile && (
-                <span className="text-sm text-gray-400">
+                <span className="text-sm text-gray-400 truncate max-w-xs">
                   {selectedFile.name}
                 </span>
               )}
+              <Button
+                onClick={handleSend}
+                className="p-3 bg-blue-600 hover:bg-blue-700 rounded-full"
+              >
+                <Send size={20} />
+              </Button>
             </div>
           </CardContent>
         </Card>

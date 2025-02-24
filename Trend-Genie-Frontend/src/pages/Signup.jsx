@@ -1,13 +1,14 @@
-import  { useState } from "react";
+import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { signup } from "../services/api";
-import aiBackground from "../assets/ai-background.jpg";
+import aiBackground from "../assets/ai-background.png";
 
 const Signup = () => {
   const [formData, setFormData] = useState({
     name: "",
     email: "",
     password: "",
+    confirmPassword: "", // Add confirmPassword field
   });
 
   const [error, setError] = useState("");
@@ -23,6 +24,13 @@ const Signup = () => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+
+    // Check if password and confirm password match
+    if (formData.password !== formData.confirmPassword) {
+      setError("Passwords do not match");
+      return; // Stop the function if passwords don't match
+    }
+
     try {
       const response = await signup(formData);
       const userData = {
@@ -88,6 +96,20 @@ const Signup = () => {
               onChange={handleChange}
               className="w-full px-3 py-2 border rounded-lg bg-gray-800 text-white placeholder-gray-400"
               placeholder="Enter your password"
+              required
+            />
+          </div>
+          <div className="mb-6">
+            <label className="block text-sm font-medium mb-2 text-white">
+              Confirm Password
+            </label>
+            <input
+              type="password"
+              name="confirmPassword" // Add name attribute for confirmPassword
+              value={formData.confirmPassword}
+              onChange={handleChange}
+              className="w-full px-3 py-2 border rounded-lg bg-gray-800 text-white placeholder-gray-400"
+              placeholder="Confirm your password"
               required
             />
           </div>
