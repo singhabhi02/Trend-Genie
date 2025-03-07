@@ -10,9 +10,12 @@ import { ScrollArea } from "../components/ui/scroll-area";
 import { Paperclip, Send } from "lucide-react";
 import Navbar from "../components/Navbar";
 import Sidebar from "../components/Sidebar";
+import { getRecommendations } from "../services/api";
 
 const Chat = () => {
-  const [chatSessions, setChatSessions] = useState([{ id: "New Chat", messages: [] }]);
+  const [chatSessions, setChatSessions] = useState([
+    { id: "New Chat", messages: [] },
+  ]);
   const [activeChat, setActiveChat] = useState(0);
   const [input, setInput] = useState("");
   const [selectedFile, setSelectedFile] = useState(null);
@@ -44,55 +47,109 @@ const Chat = () => {
     if (file) setSelectedFile(file);
   };
 
-  const handleSend = () => {
-    if (input.trim() || selectedFile) {
-      let fileUrl = null;
-      if (selectedFile) fileUrl = URL.createObjectURL(selectedFile);
+  const handleSend = async () => {
+    if (!input.trim()) return;
 
-      const newMessage = {
-        text: input,
-        file: selectedFile ? { name: selectedFile.name, url: fileUrl, type: selectedFile.type } : null,
-        sender: "user",
+    const userMessage = {
+      text: input,
+      sender: "user",
+      timestamp: moment().format("hh:mm A"),
+    };
+
+    setChatSessions((prevSessions) =>
+      prevSessions.map((session, index) =>
+        index === activeChat
+          ? { ...session, messages: [...session.messages, userMessage] }
+          : session
+      )
+    );
+
+    setInput("");
+
+    try {
+      const response = await getRecommendations(input);
+      const recommendations = response?.data?.recommendations || [];
+
+      let botMessage = {
+        text: "",
+        sender: "ai",
+        timestamp: moment().format("hh:mm A"),
+      };
+
+      if (recommendations.length > 0) {
+        botMessage.text = (
+          <table
+            className={`w-full border-collapse border ${
+              isDarkMode ? "border-gray-600" : "border-gray-300"
+            }`}
+          >
+            <thead>
+              <tr
+                className={`${
+                  isDarkMode
+                    ? "bg-gray-800 text-white"
+                    : "bg-gray-200 text-gray-900"
+                }`}
+              >
+                <th className="border p-2">Product</th>
+                <th className="border p-2">Category</th>
+                <th className="border p-2">Sub-Category</th>
+                <th className="border p-2">Color</th>
+                <th className="border p-2">Season</th>
+                <th className="border p-2">Usage</th>
+                <th className="border p-2">Gender</th>
+              </tr>
+            </thead>
+            <tbody>
+              {recommendations.map((rec, index) => (
+                <tr
+                  key={index}
+                  className={`${
+                    isDarkMode
+                      ? "bg-gray-700 text-white"
+                      : "bg-white text-gray-900"
+                  } text-center`}
+                >
+                  <td className="border p-2">
+                    {rec.productDisplayName || "N/A"}
+                  </td>
+                  <td className="border p-2">{rec.masterCategory || "N/A"}</td>
+                  <td className="border p-2">{rec.subCategory || "N/A"}</td>
+                  <td className="border p-2">{rec.baseColour || "N/A"}</td>
+                  <td className="border p-2">{rec.season || "N/A"}</td>
+                  <td className="border p-2">{rec.usage || "N/A"}</td>
+                  <td className="border p-2">{rec.gender || "Unisex"}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        );
+      } else {
+        botMessage.text = "No recommendations available.";
+      }
+
+      setChatSessions((prevSessions) =>
+        prevSessions.map((session, index) =>
+          index === activeChat
+            ? { ...session, messages: [...session.messages, botMessage] }
+            : session
+        )
+      );
+    } catch (error) {
+      console.error("Error fetching recommendations:", error);
+      const errorMessage = {
+        text: "Sorry, I couldn't fetch recommendations at the moment. Please try again later.",
+        sender: "ai",
         timestamp: moment().format("hh:mm A"),
       };
 
       setChatSessions((prevSessions) =>
         prevSessions.map((session, index) =>
           index === activeChat
-            ? {
-                ...session,
-                id: session.messages.length === 0 ? (input.slice(0, 20) || "New Chat") : session.id,
-                messages: [...session.messages, newMessage],
-              }
+            ? { ...session, messages: [...session.messages, errorMessage] }
             : session
         )
       );
-
-      setInput("");
-      setSelectedFile(null);
-      setIsJustLoggedIn(false);
-
-      setTimeout(() => {
-        setChatSessions((prevSessions) =>
-          prevSessions.map((session, index) =>
-            index === activeChat
-              ? {
-                  ...session,
-                  messages: [
-                    ...session.messages,
-                    {
-                      text: selectedFile
-                        ? `Received your file: ${selectedFile.name}`
-                        : "This is a sample AI response.",
-                      sender: "ai",
-                      timestamp: moment().format("hh:mm A"),
-                    },
-                  ],
-                }
-              : session
-          )
-        );
-      }, 1000);
     }
   };
 
@@ -141,7 +198,11 @@ const Chat = () => {
   );
 
   return (
-    <div className={`h-screen flex flex-col overflow-hidden ${isDarkMode ? "bg-gray-900 text-white" : "bg-gray-100 text-gray-900"}`}>
+    <div
+      className={`h-screen flex flex-col overflow-hidden ${
+        isDarkMode ? "bg-gray-900 text-white" : "bg-gray-100 text-gray-900"
+      }`}
+    >
       <Navbar
         isDarkMode={isDarkMode}
         toggleDarkMode={() => setIsDarkMode(!isDarkMode)}
@@ -150,7 +211,9 @@ const Chat = () => {
           localStorage.removeItem("loggedInUser");
           navigate("/");
         }}
-        className={`fixed top-0 left-0 right-0 z-50 h-16 shadow-md ${isDarkMode ? "bg-gray-800" : "bg-white"}`}
+        className={`fixed top-0 left-0 right-0 z-50 h-16 shadow-md ${
+          isDarkMode ? "bg-gray-800" : "bg-white"
+        }`}
       />
 
       <div className="flex flex-1 overflow-hidden pt-16">
@@ -177,7 +240,11 @@ const Chat = () => {
         >
           <CardContent className="flex flex-col h-full p-0">
             <ScrollArea
-              className={`flex-1 p-6 ${isDarkMode ? "bg-gradient-to-b from-gray-850 to-gray-900" : "bg-gradient-to-b from-white to-gray-50"}`}
+              className={`flex-1 p-6 ${
+                isDarkMode
+                  ? "bg-gradient-to-b from-gray-850 to-gray-900"
+                  : "bg-gradient-to-b from-white to-gray-50"
+              }`}
             >
               {chatSessions[activeChat]?.messages.length === 0 ? (
                 <div className="text-center mt-20">
@@ -188,13 +255,20 @@ const Chat = () => {
                         animate={{ opacity: 1, y: 0 }}
                         exit={{ opacity: 0, y: -20 }}
                         transition={{ duration: 0.5 }}
-                        className={`text-2xl font-medium ${isDarkMode ? "text-gray-300" : "text-gray-700"}`}
+                        className={`text-2xl font-medium ${
+                          isDarkMode ? "text-gray-300" : "text-gray-700"
+                        }`}
                       >
-                        Welcome {userInfo?.name || "User"}, How may I assist you today?
+                        Welcome {userInfo?.name || "User"}, How may I assist you
+                        today?
                       </motion.div>
                     )}
                   </AnimatePresence>
-                  <div className={`mt-4 ${isDarkMode ? "text-gray-500" : "text-gray-400"}`}>
+                  <div
+                    className={`mt-4 ${
+                      isDarkMode ? "text-gray-500" : "text-gray-400"
+                    }`}
+                  >
                     Start a conversation by typing below...
                   </div>
                 </div>
@@ -205,7 +279,9 @@ const Chat = () => {
                     initial={{ opacity: 0, y: 20 }}
                     animate={{ opacity: 1, y: 0 }}
                     transition={{ duration: 0.3 }}
-                    className={`flex mb-6 ${msg.sender === "user" ? "justify-end" : "justify-start"}`}
+                    className={`flex mb-6 ${
+                      msg.sender === "user" ? "justify-end" : "justify-start"
+                    }`}
                   >
                     <div
                       className={`max-w-2xl p-4 rounded-xl shadow-sm ${
@@ -218,7 +294,14 @@ const Chat = () => {
                           : "bg-gray-200 text-gray-900"
                       }`}
                     >
-                      {renderMessageContent(msg)}
+                      {msg.sender === "ai" && msg.isFallback ? (
+                        <div className="text-red-500 font-semibold">
+                          Sorry, I couldn't understand that. Can you try again
+                          with a different query?
+                        </div>
+                      ) : (
+                        renderMessageContent(msg)
+                      )}
                     </div>
                   </motion.div>
                 ))
@@ -227,7 +310,11 @@ const Chat = () => {
             </ScrollArea>
 
             <div
-              className={`p-4 border-t flex items-center gap-3 ${isDarkMode ? "bg-gray-800 border-gray-700" : "bg-white border-gray-200"}`}
+              className={`p-4 border-t flex items-center gap-3 ${
+                isDarkMode
+                  ? "bg-gray-800 border-gray-700"
+                  : "bg-white border-gray-200"
+              }`}
             >
               <Input
                 value={input}
@@ -235,12 +322,18 @@ const Chat = () => {
                 onKeyDown={handleKeyPress}
                 placeholder="Ask Trend Genie..."
                 className={`flex-1 border-none rounded-full px-5 py-3 focus:ring-2 focus:ring-blue-500 ${
-                  isDarkMode ? "bg-gray-700 text-white placeholder-gray-400" : "bg-gray-100 text-gray-900 placeholder-gray-500"
+                  isDarkMode
+                    ? "bg-gray-700 text-white placeholder-gray-400"
+                    : "bg-gray-100 text-gray-900 placeholder-gray-500"
                 }`}
               />
               <label
                 htmlFor="file-upload"
-                className={`p-2 ${isDarkMode ? "text-gray-400 hover:text-blue-400" : "text-gray-600 hover:text-blue-500"} cursor-pointer`}
+                className={`p-2 ${
+                  isDarkMode
+                    ? "text-gray-400 hover:text-blue-400"
+                    : "text-gray-600 hover:text-blue-500"
+                } cursor-pointer`}
               >
                 <Paperclip size={20} />
               </label>
@@ -252,13 +345,21 @@ const Chat = () => {
                 onChange={handleFileChange}
               />
               {selectedFile && (
-                <span className={`text-sm truncate max-w-xs ${isDarkMode ? "text-gray-400" : "text-gray-600"}`}>
+                <span
+                  className={`text-sm truncate max-w-xs ${
+                    isDarkMode ? "text-gray-400" : "text-gray-600"
+                  }`}
+                >
                   {selectedFile.name}
                 </span>
               )}
               <Button
                 onClick={handleSend}
-                className={`p-3 rounded-full ${isDarkMode ? "bg-blue-600 hover:bg-blue-700" : "bg-blue-500 hover:bg-blue-600"}`}
+                className={`p-3 rounded-full ${
+                  isDarkMode
+                    ? "bg-blue-600 hover:bg-blue-700"
+                    : "bg-blue-500 hover:bg-blue-600"
+                }`}
               >
                 <Send size={20} />
               </Button>
